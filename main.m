@@ -15,6 +15,7 @@ m0=9.11e-31;
 a0=2e-10;
 t0=hbar^2/(2*m0*a0^2*q);  % TB parameter in eV
 
+
 %% temperature of contacts
 dT=0;  T0=300; 
 T1=T0-dT/2;
@@ -38,8 +39,12 @@ delt=2.15;
 Ef=2.25;
 mfm=0.73;   % effective mass of FM contacts
 mox=0.2;    % effective mass of oxide
+msi=0.19;
 tfm=t0/mfm;
 tox=t0/mox;
+tsi=t0/msi; % tight binding parameter for Si
+Efc=0.1;   % Ef-Ec in Si
+Ec_si=Ef-Efc; % Ec edge in Si
 
 %%% the FM contacts
 sita=0;
@@ -64,12 +69,12 @@ AUD=cell(Ntot-1,1);
 ALD=cell(Ntot-1,1);
     
 for ii=1:Ntot-1
-    if ii<=Ns
+    if ii<=Ns  % FM
         AUD{ii}=tfm*I2;
-    elseif ii<=Ns+Nox+1
+    elseif ii<=Ns+Nox+1 % insulator
         AUD{ii}=tox*I2;
-    else
-        AUD{ii}=tfm*I2;
+    else  % FM or Si contacts
+        AUD{ii}=tsi*I2;
     end
 end
 for ii=1:Ntot-1
@@ -98,13 +103,13 @@ for ii_vd=1:Nd_step+1
         if ii<=Ns
             HD{ii}=(2*tfm+Vd/2)*I2+delt/2*(I2-Mu(1)*sigx-Mu(2)*sigy-Mu(3)*sigz);
         elseif ii==Ns+NI
-            HD{ii}=(tfm+tox+Vd/2+Ub/2)*I2+delt/4*(I2-Mu(1)*sigx-Mu(2)*sigy-Mu(3)*sigz);
+            HD{ii}=(tfm+tox+Vd/2+Ub/2)*I2+delt/2*(I2-Mu(1)*sigx-Mu(2)*sigy-Mu(3)*sigz);
         elseif ii>Ns+NI & ii<=Ns+NI+Nox
             HD{ii}=(2*tox+delt+Ub+Vd*(1/2-(ii-Ns-NI)/(Nox+1)))*I2;
         elseif ii==Ns+NI+Nox+NI
-            HD{ii}=(tfm+tox-Vd/2+Ub/2)*I2+delt/4*(I2-mu(1)*sigx-mu(2)*sigy-mu(3)*sigz);
-        else
-            HD{ii}=(2*tfm-Vd/2)*I2+delt/2*(I2-mu(1)*sigx-mu(2)*sigy-mu(3)*sigz);
+            HD{ii}=(tox+tsi-Vd/2+(Ub+delt+Ec_si)/2)*I2;
+        else  % semiconductor 
+            HD{ii}=(2*tsi-Vd/2+Ec_si)*I2;
         end
     end
     
