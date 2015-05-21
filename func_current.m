@@ -1,4 +1,4 @@
-                                 function [Ipos]=func_current(energy, HD, AUD, ALD, mu1, mu2)
+function [Ipos]=func_current(energy, HD, AUD, ALD, mu1, mu2)
 
 global kBT1 kBT2
 
