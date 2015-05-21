@@ -1,18 +1,17 @@
-function [Ipos]=func_current(energy, HD, AUD, ALD, mu1, mu2)
+                                 function [Ipos]=func_current(energy, HD, AUD, ALD, mu1, mu2)
 
-global kBT 
+global kBT1 kBT2
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sigx=[0 1; 1 0]; sigy=[0 -1i; 1i 0]; sigz=[1 0; 0 -1];
-eta=1e-12*i;
+eta=1e-15*i;
 ep = energy+eta;
 Np=length(HD);
-kBT1=kBT*300/300;
-kBT2=kBT*300/300;
-f1=1/(1+exp((energy-mu1)/kBT1));
-f2=1/(1+exp((energy-mu2)/kBT));
 
-AD     = cell(1,Np);
+f1=1/(1+exp((energy-mu1)/kBT1));
+f2=1/(1+exp((energy-mu2)/kBT2));
+
+AD = cell(1,Np);
 
 %% set the blocks for AG=I
 for ii = 1:Np

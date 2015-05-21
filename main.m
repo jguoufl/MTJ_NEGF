@@ -5,15 +5,22 @@
 clear all
 %close all
 
-global kBT
+global kBT1 kBT2
 
 %% physical parameters
-kBT=0.0259;
+kBT=0.0259;  % thermal energy at 300K
 q=1.6e-19;
 hbar=1.055e-34;
 m0=9.11e-31;
 a0=2e-10;
 t0=hbar^2/(2*m0*a0^2*q);  % TB parameter in eV
+
+%% temperature of contacts
+dT=0;  T0=300; 
+T1=T0-dT/2;
+T2=T0+dT/2;  % in K, temperature of contact2
+kBT1=(T1/300)*kBT;
+kBT2=(T2/300)*kBT;
 
 %%% the bias condition
 Vd0=0.0; % applied voltage
@@ -21,14 +28,13 @@ Vd_step=0.1;
 Nd_step=10;
 
 %%% device parameters
-flag_spec=0; 
 Ns=10;
 Nd=10;
-Nox=10;
+Nox=10;  % the oxide thickness is a0*Nox
 NI=1; % interface
 Ntot=Ns+NI+Nox+NI+Nd;
 Ub=1.4;
-delt=2.25;
+delt=2.15;
 Ef=2.25;
 mfm=0.73;   % effective mass of FM contacts
 mox=0.2;    % effective mass of oxide
@@ -36,11 +42,13 @@ tfm=t0/mfm;
 tox=t0/mox;
 
 %%% the FM contacts
-sita=pi;
+sita=0;
 Mu=[0 0 1];
 mu=[sin(sita) 0 cos(sita)];
 I2=eye(2);
 sigx=[0 1; 1 0]; sigy=[0 -1i; 1i 0]; sigz=[1 0; 0 -1];
+
+flag_spec=0; 
 
 %%% the transverse wave vectors
 Etmax=2; % in eV
@@ -163,7 +171,7 @@ figure(2)
 plot(Vdv,Id,'b--','linewidth',[2]); hold on;
 set(gca,'linewidth',[2],'fontsize',[20]);
 xlabel('V_D [V]')
-ylabel('I [A]')
+ylabel('I [A/m^2]')
 
 if flag_spec==1
     figure(21)
@@ -176,7 +184,7 @@ if flag_spec==1
 end
 
 
-    
+
     
     
 
