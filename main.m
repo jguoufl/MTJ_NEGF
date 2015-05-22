@@ -18,8 +18,8 @@ t0=hbar^2/(2*m0*a0^2*q);  % TB parameter in eV
 G0=q^2/(2*pi*hbar);  % in S
 
 %% temperature of contacts
-dT0=10;
-dT_step=10;
+dT0=20;
+dT_step=20;
 NT_step=0;
 
 %%% the bias condition
@@ -88,9 +88,6 @@ NpM=Ns;  % the right boundary of the magnet M
 
 %%% initialization
 Ic=zeros(NT_step+1,Nd_step+1);  % charge current
-torquem=zeros(Nd_step+1,3); % torque to m, in the last T and Vd point
-torqueM=zeros(Nd_step+1,3); % torque to M
-Ispos=zeros(Ntot-1,4,Nd_step+1);
 facI=G0*(1/4/pi^2)*ktmax^2;  % in S/m^2
 
 for ii_T=1:NT_step+1
@@ -99,6 +96,10 @@ for ii_T=1:NT_step+1
     T2=T0+dT/2;  % in K, temperature of contact2
     kBT1=(T1/T0)*kBT;
     kBT2=(T2/T0)*kBT;
+    %%% initialization
+    torquem=zeros(Nd_step+1,3); % torque to m, in the last T and Vd point
+    torqueM=zeros(Nd_step+1,3); % torque to M
+    Ispos=zeros(Ntot-1,4,Nd_step+1);
     
     for ii_vd=1:Nd_step+1   % voltage loop
         Vd=Vd0+(ii_vd-1)*Vd_step
@@ -153,13 +154,15 @@ for ii_T=1:NT_step+1
                 torqueM(ii_vd,:)=torqueM(ii_vd,:)-cross(Mu,cross(Mu,Is_M))*2*pi*kt_grid_n(ii_kt)*dkt_n;  % in eV
                 %% position resolved charge and spin currents
                 Ispos(:,:,ii_vd)=Ispos(:,:,ii_vd)+Inorm*2*pi*kt_grid_n(ii_kt)*dkt_n;   % in eV
-                Ic(ii_T,ii_vd)=Ic(ii_T,ii_vd)+Inorm(1,1)*2*pi*kt_grid_n(ii_kt)*dkt_n;  % in eV
-                Isvd(:,ii_T,ii_vd)=squeeze(Ispos(round(Ntot/2),2:4,ii_vd)); %[z x y]
+                Ic(ii_T,ii_vd)=Ic(ii_T,ii_vd)+Inorm(1,1)*2*pi*kt_grid_n(ii_kt)*dkt_n;  % in eV                
             end
             %% integral over transverse k in the polar coordinate.
             
         end %% end of Gaussian quadrature approach
+        Isvd(:,ii_T,ii_vd)=squeeze(Ispos(round(Ntot/2),2:4,ii_vd)); %[z x y]
+        
     end   % end of the applied voltage loop
+   
     if Nd_step>1
         Vc_sb(ii_T)=interp1(Ic(ii_T,:),Vdv,0,'linear','extrap');
         for ii_s=1:3  % spin index, [z x y]
@@ -179,14 +182,31 @@ plot(xv,Ispos(:,3,Nd_step+1),'r--','linewidth',[2]); hold on;
 plot(xv,Ispos(:,4,Nd_step+1),'g--','linewidth',[2]); hold on;
 legend('charge','z','x','y')
 set(gca,'linewidth',[2],'fontsize',[20]);
+title('position-resolved current')
 xlabel('x')
 ylabel('I, I_s')
 
-figure(2)
-plot(Vdv,Ic,'r--','linewidth',[2]); hold on;
+figure(2) % I-V characteristics
+plot(Vdv,Ic','r--','linewidth',[2]); hold on;
 set(gca,'linewidth',[2],'fontsize',[20]);
 xlabel('V_D [V]')
 ylabel('I [A/m^2]')
+
+figure(3)
+subplot(1,2,1)
+Tv=dT0:dT_step:dT0+dT_step*NT_step;
+plot(Tv,Vc_sb,'linewidth',[2]);
+set(gca,'linewidth',[2],'fontsize',[20]);
+xlabel('dT [K]')
+ylabel('V_{c,sb} [V]')
+title('Seebeck V')
+subplot(1,2,2)
+plot(Tv,Is_sb,'linewidth',[2]); hold on
+set(gca,'linewidth',[2],'fontsize',[20]);
+xlabel('dT [K]')
+ylabel('I_{s, sb} [A/m^2]')
+title('Seebeck Spin I')
+
 
 if flag_spec==1
     figure(21)
