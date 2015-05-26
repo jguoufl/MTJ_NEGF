@@ -1,4 +1,4 @@
-function [Ipos]=func_current(energy, HD, AUD, ALD, mu1, mu2)
+function [Ipos Isz]=func_current(energy, HD, AUD, ALD, mu1, mu2)
 
 global kBT1 kBT2
 
@@ -56,6 +56,9 @@ for ii=1:Np-1   % position resolved current
     Ipos(ii,4)=trace(imag(sigy*(AUD{ii}*Gnl{ii}-Gnu{ii}*ALD{ii}))); 
 end
 %%% end of computing the position-resolved current
+ii_sz=1; % the position at which current Isz retrieved 
+Isz=diag(imag(AUD{ii_sz}*Gnl{ii_sz}-Gnu{ii_sz}*ALD{ii_sz}));
+
 
 
 

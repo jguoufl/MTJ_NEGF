@@ -3,7 +3,7 @@
 %% coded by JG, May 15
 %% reciprocacity of torques proven
 clear all
-%close all
+close all
 
 global kBT1 kBT2
 
@@ -17,13 +17,15 @@ a0=2e-10;
 t0=hbar^2/(2*m0*a0^2*q);  % TB parameter in eV
 G0=q^2/(2*pi*hbar);  % in S
 
+flag_spec=0;    % 1 for computing spectrum
+
 %% temperature of contacts
 dT0=20;
 dT_step=20;
-NT_step=0;
+NT_step=4;
 
 %%% the bias condition
-Vd0=0.0; % applied voltage
+Vd0=0.00; % applied voltage
 Vd_step=0.002; 
 Nd_step=5;
 Vdv=Vd0:Vd_step:Vd0+Nd_step*Vd_step;
@@ -43,7 +45,7 @@ msi=0.19;
 tfm=t0/mfm;
 tox=t0/mox;
 tsi=t0/msi; % tight binding parameter for Si
-Efc=0.1;   % Ef-Ec in Si
+Efc=-0.1;   % Ef-Ec in Si
 Ec_si=Ef-Efc; % Ec edge in Si
 
 %%% the FM contacts
@@ -52,8 +54,6 @@ Mu=[0 0 1];
 mu=[sin(sita) 0 cos(sita)];
 I2=eye(2);
 sigx=[0 1; 1 0]; sigy=[0 -1i; 1i 0]; sigz=[1 0; 0 -1];
-
-flag_spec=0; 
 
 %%% the transverse wave vectors
 Etmax=2; % in eV
@@ -125,10 +125,12 @@ for ii_T=1:NT_step+1
         
         if flag_spec==1  % uniform energy grid for 1 kt mode kt=0
             for indE=1:length(E_grid)
-                [JEnorm]=func_current(E_grid(indE), HD, AUD, ALD, Ef1, Ef2);
-                JE(indE,1)=JEnorm(1,1);
+                [JEnorm Isz_bias]=func_current(E_grid(indE), HD, AUD, ALD, Ef1, Ef2);
+                %JE(indE,1)=JEnorm(1,1);
+                Isz(indE,1:2)=Isz_bias; % up and dn spin components
+                
             end
-            Ic(ii_vd)=q^2/(2*pi*hbar)*trapz(E_grid,JE); % in A, one mode current
+            Ic(ii_vd)=q^2/(2*pi*hbar)*trapz(E_grid,sum(Isz,2)); % in A, one mode current
         else
             
             %% Gaussian quadrature
@@ -174,48 +176,55 @@ end  % end of the temperature loop
 
 
 %% visualization
-figure(1)
-xv=1:Ntot-1;
-plot(xv,Ispos(:,1,Nd_step+1),'b-','linewidth',[2]); hold on;
-plot(xv,Ispos(:,2,Nd_step+1),'k--','linewidth',[2]); hold on;
-plot(xv,Ispos(:,3,Nd_step+1),'r--','linewidth',[2]); hold on;
-plot(xv,Ispos(:,4,Nd_step+1),'g--','linewidth',[2]); hold on;
-legend('charge','z','x','y')
-set(gca,'linewidth',[2],'fontsize',[20]);
-title('position-resolved current')
-xlabel('x')
-ylabel('I, I_s')
-
-figure(2) % I-V characteristics
-plot(Vdv,Ic','r--','linewidth',[2]); hold on;
-set(gca,'linewidth',[2],'fontsize',[20]);
-xlabel('V_D [V]')
-ylabel('I [A/m^2]')
-
-figure(3)
-subplot(1,2,1)
-Tv=dT0:dT_step:dT0+dT_step*NT_step;
-plot(Tv,Vc_sb,'linewidth',[2]);
-set(gca,'linewidth',[2],'fontsize',[20]);
-xlabel('dT [K]')
-ylabel('V_{c,sb} [V]')
-title('Seebeck V')
-subplot(1,2,2)
-plot(Tv,Is_sb,'linewidth',[2]); hold on
-set(gca,'linewidth',[2],'fontsize',[20]);
-xlabel('dT [K]')
-ylabel('I_{s, sb} [A/m^2]')
-title('Seebeck Spin I')
-
-
-if flag_spec==1
+if flag_spec~=1
+    figure(1)
+    xv=1:Ntot-1;
+    plot(xv,Ispos(:,1,Nd_step+1),'b-','linewidth',[2]); hold on;
+    plot(xv,Ispos(:,2,Nd_step+1),'k--','linewidth',[2]); hold on;
+    plot(xv,Ispos(:,3,Nd_step+1),'r--','linewidth',[2]); hold on;
+    plot(xv,Ispos(:,4,Nd_step+1),'g--','linewidth',[2]); hold on;
+    legend('charge','z','x','y')
+    set(gca,'linewidth',[2],'fontsize',[20]);
+    title('position-resolved current')
+    xlabel('x')
+    ylabel('I, I_s')
+    
+    figure(2) % I-V characteristics
+    plot(Vdv,Ic','r--','linewidth',[2]); hold on;
+    set(gca,'linewidth',[2],'fontsize',[20]);
+    xlabel('V_D [V]')
+    ylabel('I [A/m^2]')
+    
+    figure(3)
+    subplot(1,2,1)
+    Tv=dT0:dT_step:dT0+dT_step*NT_step;
+    plot(Tv,Vc_sb,'linewidth',[2]);
+    set(gca,'linewidth',[2],'fontsize',[20]);
+    xlabel('dT [K]')
+    ylabel('V_{c,sb} [V]')
+    title('V_{c,sb}')
+    subplot(1,2,2)
+    plot(Tv,Is_sb,'linewidth',[2]); hold on
+    set(gca,'linewidth',[2],'fontsize',[20]);
+    xlabel('dT [K]')
+    ylabel('I_{s, sb} [A/m^2]')
+    title('I_{s,sb}')
+    
+    
+else
     figure(21)
     df=1./(1+exp((E_grid-Ef1)./kBT))-1./(1+exp((E_grid-Ef2)./kBT));
-    TE=JE./df'; % transmission
-    plot(TE,E_grid,'linewidth',[2]);
+    Tup=Isz(:,1)./df'; % transmission for up spin
+    Tdn=Isz(:,2)./df'; % transmission for dn spin
+    plot(Tup,E_grid-Ef,'r--','linewidth',[2]); hold on;
+    plot(Tdn,E_grid-Ef,'b--','linewidth',[2]); hold on;
+    ylim(0.2*[-1*0 1])
+    grid on
+    legend('up','dn')
     set(gca,'linewidth',[2],'fontsize',[20]);
     xlabel('T_E')
     ylabel('E [eV]')
+    print -dtiff Tr
 end
 
 
